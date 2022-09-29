@@ -96,6 +96,8 @@ footer {
 	width: 40%;
 	height: 2px;
 	margin-block: 30px;
+
+	transition: all 0.3s 0.01s ease;
 }
 
 .counter {
@@ -180,7 +182,6 @@ input:focus {
 	box-shadow: 0 0px rgb(50 50 50), 0 0px 0px rgb(0 0 0 / 35%);
 	text-shadow: 0 0px 20px #ffffff9c;
 
-	-webkit-transform: translate(0, 8px);
 	transform: translate(0, 8px);
 }
 
