@@ -10,7 +10,8 @@
 	<meta name="description" content="click"/>
   	<meta name="keywords" content="click"/>
 
-	<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+	<script src="https://code.jquery.com/jquery-3.6.1.min.js" integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+	<script src="controls.js" type="text/javascript"></script>
 </head>
 
 <body style="background: url(static/img/background.png);">
@@ -19,16 +20,16 @@
 	</header>
 
   	<main>
-		<button id="main_button" class="main_button"> Press Button </button><br>
+		<button id="main_button" class="main_button red_m_button"> Press Button </button><br>
 
-		<p id="totalClicks" class="counter" style="margin-top: 45px;"> -0 </p><br>
+		<p id="totalClicks" class="counter" style="margin-top: 45px;"> 80085 </p><br>
 		<p style="margin-top: 10px;"> Total Clicks </p><br>
 
 		<div class="line" style="width: 200px;"></div><br>
 
 		<input id="nicknameVal" type="text" style="margin: 0 0px 20px;" value="" placeholder="→ Input nickname here ←"><br>
-		<p id="enterNick" style="margin-top: -35px; color: #e91b4b; font-family: 'Secular One'; font-size: 110%; transition: all 0.1s;">enter a nickname</p><br>
-		<p id="nickScore" class="counter" style="margin-top: -20px; font-size: 200%;"> -0 (-0%) clicks</p><br>
+		<p id="enterNick" style="margin-top: -35px; color: #e91b4b; font-family: 'Secular One'; font-size: 110%; transition: all 0.1s;">enter a valid nickname</p><br>
+		<p id="nickScore" class="counter" style="margin-top: -20px; font-size: 200%;"> ? clicks</p><br>
 
 		<div class="line"></div><br>
 		
@@ -36,7 +37,7 @@
 			<h1>Top 7 Clickers</h1>
 
 			<div id="topUsers">
-				<p style="font-size: 100%; padding: 0;font-family: 'Secular One', sans-serif;"> -n (-0 clicks) </p>
+				<p style="font-size: 100%; padding: 0;font-family: 'Secular One', sans-serif;"> nickname (? clicks) </p>
 				<div class="line" style="width: 100%; height: 7px; margin: 0 0 5px; background: linear-gradient(-90deg, #3f51b5, #000000);"></div>
 			</div>
 		</div>
@@ -52,46 +53,91 @@
 	<footer> © 2022 by Mihahanya (Mihas Games) </footer>
 </body>
 
-<script type="text/javascript">
+<script>
 	total_clicks = document.getElementById('totalClicks')
 	nickname_clicks = document.getElementById('nickScore')
 	top_users = document.getElementById('topUsers')
 	nickname = document.getElementById('nicknameVal')
 	enter_nick = document.getElementById('enterNick')
 
-	$('main_button').click(function() {
-		if (0 < $('#nicknameVal').val().length <= 23) {
-			 $.ajax({
+	function update_user_stats() {
+		$.ajax({
+			type: "POST",
+			url: 'get_score.php',
+			data: {nick: nickname.value},
+			success: function(response) {
+				data = JSON.parse(response)
+
+				total_clicks.innerHTML = numberWithSpaces(data.total)
+				nickname_clicks.innerHTML = numberWithSpaces(data.nick) + ' (' + (data.nick/data.total*100).toFixed(1) + '%) clicks'
+			},
+			error: function() {
+				alert(err_message);
+			}
+		});
+	}
+	update_user_stats();
+
+	function update_top() {
+		$.ajax({
+			type: "POST",
+			url: 'top_stats.php',
+			data: "",
+			success: function(response) {
+				data = JSON.parse(response)
+
+				max_clicks_n = JSON.parse(data[0]).score
+				contained = ''
+				for (const user of data) {
+					data = JSON.parse(user)
+					contained += '<p style="font-size: 100%; padding: 0;font-family: \'Secular One\', sans-serif;"> ' + data.name + ' (' + numberWithSpaces(data.score) + ' clicks) </p><div class="line" style="width: ' + (data.score/max_clicks_n*100).toFixed() + '%; height: 7px; margin: 0 0 20px; background: linear-gradient(-90deg, #3f51b5, #009688);"></div>'
+				}
+				top_users.innerHTML = contained
+			},
+			error: function() {
+				alert(err_message);
+			}
+		});
+	}
+	update_top()
+
+
+	$('#main_button').click(function() {
+		if (ok_length($('#nicknameVal').val())) {
+			$.ajax({
 				type: "POST",
 				url: 'increase_score.php',
-				data: "",
+				data: {nick: nickname.value},
 				error: function() {
-					alert('Some error in the work of the site, I will fix everything soon');
+					alert(err_message);
 				}
 			});
 
-			$.ajax({
-				type: "POST",
-				url: 'get_score.php',
-				data: $(this).serialize(),
-				success: function(response) {
-					total_clicks.innerHTML = response
-				},
-				error: function() {
-					alert('Some error in the work of the site, I will fix everything soon');
-				}
-			});
+			update_user_stats()
 		}
 	});
 
 	$('#nicknameVal').on('keydown keyup change', function() {
-		if (0 < $(this).val().length <= 23) {
+		if (ok_length($(this).val())) {
+			$("#main_button").attr('class', 'main_button');
 			enter_nick.style.opacity = "0";
 		}
 		else {
+			$("#main_button").attr('class', 'main_button red_m_button');
 			enter_nick.style.opacity = "1";
+			nickname_clicks.innerHTML = '? clicks'
 		}
+		update_user_stats()
 	})
+
+	setInterval(function() {
+		update_user_stats()
+		update_top()
+	}, 1000)
+
+	if (window.history.replaceState) {
+		window.history.replaceState(null, null, window.location.href);
+	}
 
 </script>
 
