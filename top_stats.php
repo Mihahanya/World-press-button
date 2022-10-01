@@ -2,7 +2,7 @@
 
 $mysql = new mysqli('localhost', 'root', '', 'users_score');
 
-$top = $mysql->query("SELECT `name`, `score` FROM `users` ORDER BY `score` DESC LIMIT 7");
+$top = $mysql->query("SELECT `name`, `score` FROM `users` ORDER BY `score` DESC LIMIT 10");
 
 $mysql->close();
 
