@@ -3,7 +3,7 @@
 $name = $_POST["nick"];
 $date = date('Y-m-d H:i:s');
 
-$mysql = new mysqli('localhost', 'root', '', 'users_score');
+require "connect.php";
 
 if ($name != '') {
 	$mysql->query("INSERT INTO `total_clicks_statistics` (`name`, `date`) VALUES ('$name', '$date')");

@@ -1,6 +1,6 @@
 <?php
 
-$mysql = new mysqli('localhost', 'root', '', 'users_score');
+require "connect.php";
 
 $top = $mysql->query("SELECT `name`, `score` FROM `users` ORDER BY `score` DESC LIMIT 10");
 
