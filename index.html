@@ -27,9 +27,9 @@
 
 		<div class="line" style="width: 200px;"></div><br>
 
+		<p id="enterNick" style="margin: -30px 0px -20px; color: #e91b4b; font-family: 'Secular One'; font-size: 110%; transition: all 0.1s;">enter a valid nickname</p><br>
 		<input id="nicknameVal" type="text" style="margin: 0 0px 20px;" value="" placeholder="→ Input nickname here ←"><br>
-		<p id="enterNick" style="margin-top: -35px; color: #e91b4b; font-family: 'Secular One'; font-size: 110%; transition: all 0.1s;">enter a valid nickname</p><br>
-		<p id="nickScore" class="counter" style="margin-top: -20px; font-size: 200%;"> ? clicks</p><br>
+		<p id="nickScore" class="counter" style="font-size: 200%;"> ? clicks</p><br>
 
 		<div class="line"></div><br>
 		
@@ -46,7 +46,7 @@
 		
 		<div class="info_block">
 			<h1>Info</h1>
-			This site was created by <a href="https://github.com/mihahanya/">Mihahanya</a> without any commercial purposes, purely for entertainment. Here people can click on a button from any nickname and increase his score. That's it. Try...
+			This site was created by <a href="https://github.com/mihahanya/">Mihahanya</a> without any commercial purposes, just for fun. Here people can click on a button from any nickname and increase his score. That's it. Try...
 		</div>
 	</main>
 
@@ -90,7 +90,7 @@
 				contained = ''
 				for (const user of data) {
 					data = JSON.parse(user)
-					contained += '<p style="font-size: 100%; padding: 0;font-family: \'Secular One\', sans-serif;"> ' + data.name + ' (' + numberWithSpaces(data.score) + ' clicks) </p><div class="line" style="width: ' + (data.score/max_clicks_n*100).toFixed() + '%; height: 7px; margin: 0 0 20px; background: linear-gradient(-90deg, #3f51b5, #2196f3);"></div>'
+					contained += '<p style="font-size: 100%; padding: 0;font-family: \'Secular One\', sans-serif;"> ' + data.name + ' (' + numberWithSpaces(data.score) + ' clicks) </p><div class="line" style="width: ' + (data.score/max_clicks_n*100).toFixed(2) + '%; height: 7px; margin: 0 0 20px; background: linear-gradient(-90deg, #3f51b5, #2196f3);"></div>'
 				}
 				top_users.innerHTML = contained
 			},
@@ -103,7 +103,7 @@
 
 
 	$('#main_button').click(function() {
-		if (ok_length($('#nicknameVal').val())) {
+		if (ok_name($('#nicknameVal').val())) {
 			$.ajax({
 				type: "POST",
 				url: 'increase_score.php',
@@ -118,7 +118,7 @@
 	});
 
 	$('#nicknameVal').on('keydown keyup change', function() {
-		if (ok_length($(this).val())) {
+		if (ok_name($(this).val())) {
 			$("#main_button").attr('class', 'main_button');
 			enter_nick.style.opacity = "0";
 		}

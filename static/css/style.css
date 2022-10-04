@@ -139,7 +139,7 @@ input {
 	transition: all 0.3s 0.01s ease;
 }
 input:focus {
-	border-bottom: 3px solid #3f51b5;
+	border-bottom: 3px solid #3f51b573;
 }
 
 
