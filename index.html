@@ -34,7 +34,7 @@
 		<div class="line"></div><br>
 		
 		<div class="info_block">
-			<h1>Top 10 Clickers</h1>
+			<h1>Top 15 Clickers</h1>
 
 			<div id="topUsers" style="text-align: left;">
 				<p style="font-size: 100%; padding: 0;font-family: 'Secular One', sans-serif;"> nickname (? clicks) </p>
@@ -60,21 +60,32 @@
 	nickname = document.getElementById('nicknameVal')
 	enter_nick = document.getElementById('enterNick')
 
-	update_period = 2000
+	var update_period = 1500
 	
-	var total_score = 1000
+	var total_score = 0
+	var user_score = 0
+
+	top_length = 15
+	
+	// functional
+
+	function set_scores(total=true, nick=true) {
+		if (total) total_clicks.innerHTML = numberWithSpaces(total_score)
+		if (nick) nickname_clicks.innerHTML = numberWithSpaces(user_score) + ' (' + (user_score/total_score*100).toFixed(1) + '%) clicks'
+	}
+
 	function update_total() {
 		$.ajax({
 			type: "POST",
 			url: 'get_total_score.php',
 			data: {nick: nickname.value},
 			success: function(response) {
-				total_score = response
-				total_clicks.innerHTML = numberWithSpaces(response)
+				if (response != total_score) {
+					total_score = response
+					set_scores(total=true, nick=false)
+				}
 			},
-			error: function() {
-				alert(err_message);
-			}
+			error: function() { alert(err_message); }
 		});
 	}
 
@@ -84,14 +95,18 @@
 			url: 'get_user_score.php',
 			data: {nick: nickname.value},
 			success: function(response) {
-				if (response != '')
-					nickname_clicks.innerHTML = numberWithSpaces(response) + ' (' + (response/total_score*100).toFixed(1) + '%) clicks'
-				else
+				if (response != '') {
+					if (response != user_score) {
+						user_score = response
+						set_scores(total=false)
+					}
+				}
+				else {
+					user_score = -1
 					nickname_clicks.innerHTML = '? clicks'
+				}
 			},
-			error: function() {
-				alert(err_message);
-			}
+			error: function() { alert(err_message); }
 		});
 	}
 
@@ -106,26 +121,37 @@
 	function update_top() {
 		$.ajax({
 			type: "POST",
-			url: 'get_stats.php',
+			url: 'get_top.php',
 			data: "",
 			success: function(response) {
-				data = JSON.parse(response)
+				top_data = JSON.parse(response)
 
-				max_clicks_n = JSON.parse(data[0]).score
-				contained = ''
-				for (const user of data) {
+				max_clicks_n = JSON.parse(top_data[0]).score
+				i = 0
+				for (const user of top_data) {
 					data = JSON.parse(user)
-					contained += '<p style="font-size: 100%; padding: 0;font-family: \'Secular One\', sans-serif;"> ' + data.name + ' (' + numberWithSpaces(data.score) + ' clicks) </p><div class="line" style="width: ' + (data.score/max_clicks_n*100).toFixed(2) + '%; height: 7px; margin: 0 0 20px; background: linear-gradient(-90deg, #3f51b5, #2196f3);"></div>'
+
+					if ($('#top_'+i).attr('ckickCount') != data.score || $('#top_'+i).attr('nick') != data.name) {
+						$('#top_line_'+i).width((data.score/max_clicks_n*100).toFixed(2) + '%');
+						document.getElementById('top_nick_'+i).innerHTML = data.name + ' (' + numberWithSpaces(data.score) + ' clicks)'
+
+						$('#top_'+i).attr('ckickCount', data.score); $('#top_'+i).attr('nick', data.name)
+					}
+
+					i++
 				}
-				top_users.innerHTML = contained
 			},
-			error: function() {
-				alert(err_message);
-			}
+			error: function() { alert(err_message); }
 		});
 	}
+
+	// update
 	
 	function init() {
+		top_users.innerHTML = ''
+		for (var i=0; i < top_length; i++)
+			top_users.innerHTML += '<div id="top_' + i + '" style="margin: 0 0 15px;" ckickCount="-1" nick=""><p id="top_nick_' + i + '" style="font-size: 100%; padding: 0;font-family: \'Secular One\', sans-serif;"> nickname (? clicks) </p> <div id="top_line_' + i + '" class="line" style="width: 100%; height: 7px; margin: 0; background: linear-gradient(-90deg, #3f51b5, #2196f3);"></div></div>'
+
 		update_total()
 		update_top()
 		visitor()
@@ -134,10 +160,9 @@
 	
 	setInterval(function() {
 		update_total()
-		update_user_stats()
+		if (ok_name($('#nicknameVal').val())) update_user_stats()
 		update_top()
 	}, update_period)
-
 
 	$('#main_button').click(function() {
 		if (ok_name($('#nicknameVal').val())) {
@@ -145,27 +170,30 @@
 				type: "POST",
 				url: 'increase_score.php',
 				data: {nick: nickname.value},
-				error: function() {
-					alert(err_message);
-				}
+				error: function() { alert(err_message); }
 			});
+			
+			total_score++
+			user_score++
+			set_scores()
 
-			update_total()
-			update_user_stats()
+			//update_total()
+			//update_user_stats()
 		}
 	});
 
 	$('#nicknameVal').on('keydown keyup change', function() {
 		if (ok_name($(this).val())) {
+			update_user_stats()
 			$("#main_button").attr('class', 'main_button');
 			enter_nick.style.opacity = "0";
 		}
 		else {
 			$("#main_button").attr('class', 'main_button red_m_button');
+			user_score = -1
 			enter_nick.style.opacity = "1";
 			nickname_clicks.innerHTML = '? clicks'
 		}
-		update_user_stats()
 	})
 
 	if (window.history.replaceState) {

@@ -2,7 +2,7 @@
 
 require "connect.php";
 
-$top = $mysql->query("SELECT `name`, `score` FROM `users` ORDER BY `score` DESC LIMIT 10");
+$top = $mysql->query("SELECT `name`, `score` FROM `users` ORDER BY `score` DESC LIMIT 15");
 
 $mysql->close();
 
