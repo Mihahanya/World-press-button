@@ -60,28 +60,53 @@
 	nickname = document.getElementById('nicknameVal')
 	enter_nick = document.getElementById('enterNick')
 
-	function update_user_stats() {
+	update_period = 2000
+	
+	var total_score = 1000
+	function update_total() {
 		$.ajax({
 			type: "POST",
-			url: 'get_score.php',
+			url: 'get_total_score.php',
 			data: {nick: nickname.value},
 			success: function(response) {
-				data = JSON.parse(response)
-
-				total_clicks.innerHTML = numberWithSpaces(data.total)
-				nickname_clicks.innerHTML = numberWithSpaces(data.nick) + ' (' + (data.nick/data.total*100).toFixed(1) + '%) clicks'
+				total_score = response
+				total_clicks.innerHTML = numberWithSpaces(response)
 			},
 			error: function() {
 				alert(err_message);
 			}
 		});
 	}
-	update_user_stats();
+
+	function update_user_stats() {
+		$.ajax({
+			type: "POST",
+			url: 'get_user_score.php',
+			data: {nick: nickname.value},
+			success: function(response) {
+				if (response != '')
+					nickname_clicks.innerHTML = numberWithSpaces(response) + ' (' + (response/total_score*100).toFixed(1) + '%) clicks'
+				else
+					nickname_clicks.innerHTML = '? clicks'
+			},
+			error: function() {
+				alert(err_message);
+			}
+		});
+	}
+
+	function visitor() {
+		$.ajax({
+			type: "POST",
+			url: 'visitor.php',
+			data: ""
+		});
+	}
 
 	function update_top() {
 		$.ajax({
 			type: "POST",
-			url: 'top_stats.php',
+			url: 'get_stats.php',
 			data: "",
 			success: function(response) {
 				data = JSON.parse(response)
@@ -99,7 +124,19 @@
 			}
 		});
 	}
-	update_top()
+	
+	function init() {
+		update_total()
+		update_top()
+		visitor()
+	}
+	init()
+	
+	setInterval(function() {
+		update_total()
+		update_user_stats()
+		update_top()
+	}, update_period)
 
 
 	$('#main_button').click(function() {
@@ -113,6 +150,7 @@
 				}
 			});
 
+			update_total()
 			update_user_stats()
 		}
 	});
@@ -129,11 +167,6 @@
 		}
 		update_user_stats()
 	})
-
-	setInterval(function() {
-		update_user_stats()
-		update_top()
-	}, 2000)
 
 	if (window.history.replaceState) {
 		window.history.replaceState(null, null, window.location.href);

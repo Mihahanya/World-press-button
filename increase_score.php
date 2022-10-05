@@ -3,17 +3,10 @@
 $name = $_POST["nick"];
 $date = date('Y-m-d H:i:s');
 
-if (!empty($_SERVER['HTTP_CLIENT_IP'])) 			
-	$ip = $_SERVER['HTTP_CLIENT_IP'];
-elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) 	
-	$ip = $_SERVER['HTTP_X_FORWARDED_FOR']; 
-else
-	$ip = $_SERVER['REMOTE_ADDR'];
-
 require "connect.php";
 
-if ($name != '') {
-	$mysql->query("INSERT INTO `total_clicks_statistics` (`name`, `date`, `ip`) VALUES ('$name', '$date', '$ip')");
+if (strlen($name) > 0 && strlen($name) <= 32 && mb_detect_encoding($name, 'ASCII', true)) {
+	$mysql->query("UPDATE `total_clicks` SET `count`=`count`+1 WHERE `id`= 1");
 	$mysql->query("INSERT INTO `users` (`name`, `score`, `creation_date`) VALUES ('$name', '1', '$date') ON DUPLICATE KEY UPDATE `score` = `score`+1");
 }
 
